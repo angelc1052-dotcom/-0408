@@ -1,7 +1,11 @@
+name: Run Python Script
+
 on:
   schedule:
-    - cron:  "*/5 1-5 * * 1-5"
-  workflow_dispatch:
+    # 這裡的 Cron 是 UTC 時間，如果你在台灣/香港 (UTC+8)，
+    # "*/5 1-5 * * 1-5" 代表週一至週五的 09:00 - 13:00 (每 5 分鐘跑一次)
+    - cron: "*/5 1-5 * * 1-5"
+  workflow_dispatch: # 允許手動執行
 
 jobs:
   build:
@@ -9,17 +13,20 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4 # 升級到 v4，效能更好且更安全
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5 # 升級到 v5
         with:
           python-version: '3.9'
+          cache: 'pip' # 自動快取套件，縮短下次執行的時間
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install requests beautifulsoup4
+          # 如果你有 requirements.txt，建議改用：
+          # pip install -r requirements.txt
 
       - name: Run Python script
         run: python test1.py
