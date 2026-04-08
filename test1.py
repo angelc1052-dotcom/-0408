@@ -1,51 +1,49 @@
-	# 先導入後面會用到的套件
-import requests # 請求工具
-from bs4 import BeautifulSoup # 解析工具
-import time # 用來暫停程式
- 
+# 先導入後面會用到的套件
+import requests
+from bs4 import BeautifulSoup
+import time
+
 # 要爬的股票
-stock = ["1101","2330,1102"]
-	for i in range(len(stock)): # 迴圈依序爬股價
+stock = ["1101", "2330", "1102"]
 
-	    # 現在處理的股票
+for i in range(len(stock)):  # ✅ 縮排修正
+    stockid = stock[i]
 
-	    stockid = stock[i]
+    # 網址
+    url = "https://tw.stock.yahoo.com/quote/" + stockid + ".TW"
 
-	    # 網址塞入股票編號
+    # 發送請求
+    r = requests.get(url)
 
-	    url = "https://tw.stock.yahoo.com/quote/"+stockid+".TW"
+    # 解析 HTML
+    soup = BeautifulSoup(r.text, 'html.parser')
 
-	    # 發送請求
+    # 抓股價
+    price_tag = soup.find(
+        'span',
+        class_=[
+            "Fz(32px) Fw(b) Lh(1) Mend(16px) D(f) Ai(c) C($c-trend-down)",
+            "Fz(32px) Fw(b) Lh(1) Mend(16px) D(f) Ai(c)",
+            "Fz(32px) Fw(b) Lh(1) Mend(16px) D(f) Ai(c) C($c-trend-up)"
+        ]
+    )
 
-	    r = requests.get(url)
+    # 防呆（避免抓不到）
+    if price_tag:
+        price = price_tag.getText()
+    else:
+        price = "抓不到"
 
-	    # 解析回應的 HTML
+    # 訊息
+    message = f"股票 {stockid} 即時股價為 {price}"
+    print(message)
 
-	    soup = BeautifulSoup(r.text, 'html.parser')
+    # Telegram 設定
+    token = "你的token"
+    chat_id = "你的id"
 
-	    # 定位股價
+    send_url = f"https://api.telegram.org/bot{token}/sendMessage?chat_id={chat_id}&text={message}"
+    requests.get(send_url)
 
-	    price = soup.find('span',class_=["Fz(32px) Fw(b) Lh(1) Mend(16px) D(f) Ai(c) C($c-trend-down)","Fz(32px) Fw(b) Lh(1) Mend(16px) D(f) Ai(c)","Fz(32px) Fw(b) Lh(1) Mend(16px) D(f) Ai(c) C($c-trend-up)"]).getText()
-     	    # 回報的訊息 (可自訂)
-
-	    message = "股票 "+stockid+" 即時股價為 "+price
-
-	    # 用 telegram bot 回報股價
-
-	    # bot token
-
-	    token = "輸入你的 bot token"
-
-	    # 使用者 id
-
-	    chat_id="輸入你的 telegram id"
-
-	    # bot 送訊息
-
-	    url = f"https://api.telegram.org/bot{token}/sendMessage?chat_id={chat_id}&text={message}"
-
-	    requests.get(url)
-
-	    # 每次都停 3 秒
-
-	    time.sleep(3)
+    # 暫停
+    time.sleep(3)
